@@ -1,0 +1,31 @@
+name: Build plugin
+
+on:
+  push:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: basicsynth
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+          - name: Mac-AppleSilicon
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build VST3
+        run: cargo run --package xtask --release -- bundle basic_synth --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BasicSynth-${{ matrix.name }}
+          path: basicsynth/target/bundled/*.vst3
